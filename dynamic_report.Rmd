@@ -9,19 +9,87 @@ knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE, error=FALSE)
 ```
 
 ```{css}
-
+body {
+  color: #EAEAEA;
+  background-color: #222222;
+  font-family: "Times New Roman";
+}
 ```
 
-## What's going on with this data?
+## What's the most popular Pirate101 class?
 
-You need to change the contents of this Rmd! Replace the R code and markdown give below in this template document.
+I am analyzing data gathered from Pirate101 to determine the most popular class among players. By counting the number of players of each class present in Avery's court where players loiter. Using these numbers, my goal is to find trends in class preference and player distribution within the game.
 
 ```{r}
-pets <- c("cat", "dog", "turtle", "rabbit")
-best_pet <- pets[1]
+library(tidyverse)
 
+csv_file <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vRC8SyWOWWo7mbzWHpW0adli4owaJYYoSi3AHRzmMkKLjOeKXu8lGMTYsCg0JNihEm3OPDQjUyyx9BD/pub?output=csv"
+
+logged_data <- read_csv(csv_file)
+
+latest_data <- logged_data %>% rename("class" = 2, 
+         "Privateer" = 3, 
+         "Musketeer" = 4, 
+         "Witchdoctor" = 5, 
+         "Buccaneer" = 6, 
+         "Swashbuckler" = 7)
+
+class_max <- latest_data %>%
+  summarize(across(Privateer:Swashbuckler, max, na.rm = TRUE))
+
+class_min <- latest_data %>%
+  summarize(across(Privateer:Swashbuckler, min, na.rm = TRUE))
+
+ggplot(data = latest_data, aes(x = class)) + 
+  geom_bar(aes(y = ..count..)) +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.5, size = 5) + 
+  labs(title = "Pirate101 Class Popularity", 
+       subtitle = "Seeing which class is the most popular among Pirate101 players", 
+       x = "Classes (The 5 classes of Pirate101)", 
+       y = "Most Seen Class")
+
+print(class_max)
+max_seen <- max(class_max) # most seen class number
+min_seen <- min(class_min)
+max_seen_class <- names(class_max)[which.max(class_max)] # most seen class name
+min_seen_class <- names(class_min)[which(class_min == min(class_min))]
 ```
 
-The best pet to have is a `r best_pet` of course!
+The bar chart above displays the counts of which class was seen the most in each server. The bar graph shows the of the 25 servers that were observed and logged, 9 of which had mostly players of the Privateer class. The class that was observed the most times in a single server was the `r max_seen_class` class, which had `r max_seen` instances observed. In contrast the least seen class would be the `r min_seen_class` classes which had `r min_seen` instances observed in some servers.
 
-![](https://c.tenor.com/-qBsG1HwR4oAAAAC/tenor.gif)
+```{r}
+library(tidyverse)
+
+csv_file <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vRC8SyWOWWo7mbzWHpW0adli4owaJYYoSi3AHRzmMkKLjOeKXu8lGMTYsCg0JNihEm3OPDQjUyyx9BD/pub?output=csv"
+
+logged_data <- read_csv(csv_file)
+
+latest_data <- logged_data %>% rename("class" = 2, 
+         "Privateer" = 3, 
+         "Musketeer" = 4, 
+         "Witchdoctor" = 5, 
+         "Buccaneer" = 6, 
+         "Swashbuckler" = 7)
+
+class_mean <- latest_data %>%
+  summarize(across(Privateer:Swashbuckler, mean, na.rm = TRUE))
+
+ggplot(pivot_longer(class_mean, everything(), names_to = "class", values_to = "mean_value"), 
+       aes(x = class, y = mean_value)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(mean_value, 2)), vjust = -0.5, size = 5) +
+  labs(title = "Pirate101 Class Popularity", 
+       subtitle = "Seeing the average number of player for each class among Pirate101 players", 
+       x = "Classes (The 5 classes of Pirate101)", 
+       y = "Average number seen")
+
+print(class_mean)
+
+max_average <- max(class_mean)
+min_average <- min(class_mean)
+max_seen_mean <- names(class_mean)[which.max(class_mean)]
+min_seen_class <- names(class_mean)[which.min(class_mean)]
+
+```
+This bar chart above shows the average number of each class seen across all servers. The class with the highest average amount of players seen was the `r max_seen_mean` class which on average was seen `r max_average` times per server. While the least seen class was the `r min_seen_class` class seen about `r min_average` times per server.
+
